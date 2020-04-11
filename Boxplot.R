@@ -1,0 +1,58 @@
+## Restart & Cleaning the workspace 
+rm(list=ls())
+gc()
+cat("\014")
+
+library(flipTime)
+library(lubridate)
+#selzionare dataset su cui lavorare tra JPL.txt e caltech.txt
+data <- read.table( 'caltech.txt' ,header = TRUE)
+
+
+data$conn_time <- AsDateTime(data$connectionTime) 
+disc_time <- AsDateTime(data$disconnectTime)
+charg_time <- AsDateTime(data$doneChargingTime)
+
+data$disc_difference <- as.numeric(difftime(disc_time, data$conn_time), units = 'mins')
+data$charg_difference <- as.numeric(difftime(charg_time,data$conn_time), units = 'mins')
+
+data$disc_difference_hour <- data$disc_difference/60
+data$charg_difference_hour <- data$charg_difference/60
+
+a <- as.numeric(substr(data$connection_hour,1,2))
+b <- as.numeric(substr(data$connection_hour,4,5))
+data$conn_time <- a+b/60
+ind1=which(data$conn_time >= 0 & data$conn_time <= 6)
+ind2=which(data$conn_time > 6 & data$conn_time <= 12) 
+ind3=which(data$conn_time > 12 & data$conn_time <= 18)
+ind4=which(data$conn_time > 18 & data$conn_time <= 24)
+
+data$fasce<-as.character(data$id)
+data$fasce[ind1]<-'0-6'
+data$fasce[ind2]<-'6-12'
+data$fasce[ind3]<-'12-18'
+data$fasce[ind4]<-'18-24'
+data$fasce<-as.factor(data$fasce)
+
+x11()
+
+boxplot(data$charg_difference_hour~data$fasce, main='charging time in different time slots',ylim=c(0,20),col="orange")
+
+
+
+
+#### disconnection time
+a1 <- as.numeric(substr(data$disconnectTime,18,19))
+b1<- as.numeric(substr(data$disconnectTime,21,22))
+data$disc_time <- a+b/60
+ind1d=which(data$disc_time >= 0 & data$disc_time <= 6)
+ind2d=which(data$disc_time > 6 & data$disc_time <= 12) 
+ind3d=which(data$disc_time > 12 & data$disc_time <= 18)
+ind4d=which(data$disc_time > 18 & data$disc_time <=24)
+
+
+
+x11(title = "dati filtrati")
+boxplot(data$disc_difference_hour~data$fasce, main='connection time in different time slots',ylim=c(0,20),col="green")
+
+
